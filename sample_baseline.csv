@@ -1,0 +1,11 @@
+as_of_kst,instrument_id,value,unit,quote_type
+2026-06-20 15:30:00,KTB_3Y,3.180,percent,final_yield
+2026-06-20 15:30:00,KTB_5Y,3.205,percent,final_yield
+2026-06-20 15:30:00,KTB_10Y,3.235,percent,final_yield
+2026-06-20 15:30:00,KTB_20Y,3.185,percent,final_yield
+2026-06-20 15:30:00,KTB_30Y,3.170,percent,final_yield
+2026-06-20 15:30:00,CORP_AA0_5Y,3.645,percent,fair_yield
+2026-06-20 15:30:00,CORP_AA0_10Y,3.755,percent,fair_yield
+2026-06-20 15:30:00,SPECIAL_AAA_10Y,3.455,percent,fair_yield
+2026-06-20 15:30:00,SPECIAL_AAA_20Y,3.425,percent,fair_yield
+2026-06-20 15:30:00,SPECIAL_AAA_30Y,3.415,percent,fair_yield
