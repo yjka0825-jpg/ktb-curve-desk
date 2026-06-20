@@ -2,6 +2,8 @@
 
 [![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=yjka0825-jpg/ktb-curve-desk&branch=main&mainModule=app.py)
 
+즉시 사용 가능한 공개판: <https://yjka0825-jpg.github.io/ktb-curve-desk/>
+
 보험사 장부가 계정 운용역을 위한 국고채 전 만기 일드 커브·기간 프리미엄 모니터입니다.
 
 ## 핵심 기능
@@ -48,4 +50,4 @@ ADMIN_PASSWORD = "충분히 긴 관리자 비밀번호"
 
 무료 원천의 누락·지연 시 모의 데이터가 작동합니다. `MOCK` 값은 실제 체결·호가가 아니며 투자판단 전 공식 원천을 확인해야 합니다.
 
-네이버페이 증권 공개 데이터는 5분 단위로만 재조회하여 서비스 부하를 제한합니다. 원천 응답에는 레피니티브 기준 및 실시간 여부가 포함되며, 장 마감 후에는 `지연`으로 표시합니다.
+네이버페이 증권 공개 데이터는 5분 단위로만 재조회하여 서비스 부하를 제한합니다. GitHub Pages 공개판은 CORS 중계를 위해 Jina Reader를 사용하며 이를 출처에 표시합니다. 원천 응답에는 레피니티브 기준 및 실시간 여부가 포함되고 장 마감 후에는 `지연`으로 표시합니다.
