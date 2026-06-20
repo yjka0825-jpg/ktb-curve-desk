@@ -1,5 +1,7 @@
 # KTB Curve Desk
 
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=yjka0825-jpg/ktb-curve-desk&branch=main&mainModule=app.py)
+
 보험사 장부가 계정 운용역을 위한 국고채 전 만기 일드 커브·기간 프리미엄 모니터입니다.
 
 ## 핵심 기능
