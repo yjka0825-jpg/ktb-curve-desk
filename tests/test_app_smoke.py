@@ -10,7 +10,7 @@ def test_dashboard_renders_and_budget_updates():
     app.run()
     assert not app.exception
     assert any("국고채 전 만기" in item.value for item in app.markdown)
-    assert len(app.metric) >= 15
+    assert len(app.metric) >= 12
 
     app.number_input[0].set_value(100.0)
     app.number_input[1].set_value(25.0)

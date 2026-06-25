@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import hashlib
 import io
+import os
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
@@ -12,7 +12,13 @@ import numpy as np
 import pandas as pd
 import requests
 
-from .config import BUNDLED_BASELINE, INSTRUMENTS, NAVER_REUTERS_CODES, PREVIOUS_CLOSE, YAHOO_TICKERS
+from .config import (
+    ECOS_KTB_ITEM_CODES,
+    ECOS_STAT_CODE,
+    INSTRUMENTS,
+    NAVER_REUTERS_CODES,
+    YAHOO_TICKERS,
+)
 
 KST = ZoneInfo("Asia/Seoul")
 MARKET_OPEN = time(9, 0)
@@ -22,27 +28,32 @@ MARKET_CLOSE = time(15, 45)
 @dataclass(frozen=True)
 class Observation:
     instrument_id: str
-    value: float
+    value: float | None
     status: str
     source: str
-    as_of: datetime
+    as_of: datetime | None
 
 
 @dataclass(frozen=True)
 class MarketSnapshot:
     observations: dict[str, Observation]
     previous_close: dict[str, float]
-    futures_5m_change: float
+    futures_5m_change: float | None
     generated_at: datetime
 
     @property
     def values(self) -> dict[str, float]:
-        return {key: item.value for key, item in self.observations.items()}
+        return {
+            key: item.value
+            for key, item in self.observations.items()
+            if item.value is not None
+        }
 
 
 def _is_holiday(day: date) -> bool:
     try:
         import holidays
+
         return day in holidays.country_holidays("KR", years=[day.year])
     except Exception:
         return False
@@ -77,66 +88,6 @@ def market_is_open(now: datetime | None = None) -> bool:
     return _is_business_day(now.date()) and MARKET_OPEN <= now.time() <= MARKET_CLOSE
 
 
-def _seed(*parts: object) -> int:
-    text = "|".join(map(str, parts)).encode("utf-8")
-    return int(hashlib.sha256(text).hexdigest()[:8], 16)
-
-
-def _minute_factors(ts: datetime) -> tuple[float, float, float]:
-    rng = np.random.default_rng(_seed(ts.date(), ts.hour, ts.minute))
-    return tuple(rng.normal(0, scale) for scale in (0.0040, 0.0030, 0.0020))
-
-
-def _mock_yield(instrument_id: str, baseline: float, ts: datetime) -> float:
-    meta = INSTRUMENTS[instrument_id]
-    tenor = float(meta["tenor"])
-    level, slope, curve = _minute_factors(ts)
-    slope_loading = (tenor - 10) / 27
-    curve_loading = -((tenor - 16.5) / 16.5) ** 2 + 0.35
-    idio = np.random.default_rng(_seed(instrument_id, ts.isoformat())).normal(0, 0.0012)
-    return baseline + level + slope * slope_loading + curve * curve_loading + idio
-
-
-def five_minute_mock_sma(instrument_id: str, baseline: float, ts: datetime) -> float:
-    points = [_mock_yield(instrument_id, baseline, ts - timedelta(minutes=i)) for i in range(5)]
-    return round(float(np.mean(points)), 4)
-
-
-def _futures_path(day: date, minute_index: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    count = max(minute_index + 1, 6)
-    rng = np.random.default_rng(_seed("futures", day))
-    shocks = rng.normal(0, 0.018, count)
-    jumps = np.zeros(count)
-    if count > 95:
-        jumps[90] = (-1 if _seed(day, "direction") % 2 else 1) * 0.16
-    ktbf10 = 111.35 + np.cumsum(shocks + jumps)
-    ktbf3 = 104.72 + np.cumsum(shocks * 0.38)
-    direction = -1 if _seed(day, "foreign") % 2 else 1
-    foreign10 = np.cumsum(rng.normal(direction * 7.5, 42, count)).round().astype(int)
-    foreign3 = np.cumsum(rng.normal(direction * 3.0, 28, count)).round().astype(int)
-    return ktbf3, ktbf10, foreign3, foreign10
-
-
-def _futures_observations(ts: datetime) -> tuple[dict[str, Observation], float]:
-    start = datetime.combine(ts.date(), MARKET_OPEN, KST)
-    minute_index = max(0, int((ts - start).total_seconds() // 60))
-    ktbf3, ktbf10, foreign3, foreign10 = _futures_path(ts.date(), minute_index)
-    index = min(minute_index, len(ktbf10) - 1)
-    prior_index = max(0, index - 5)
-    change = round(float(ktbf10[index] - ktbf10[prior_index]), 3)
-    values = {
-        "KTBF3_PRICE": float(ktbf3[index]),
-        "KTBF10_PRICE": float(ktbf10[index]),
-        "KTBF3_FOREIGN_NET": int(foreign3[index]),
-        "KTBF10_FOREIGN_NET": int(foreign10[index]),
-    }
-    observations = {
-        key: Observation(key, value, "MOCK", "KOFIA 기준 모킹", ts)
-        for key, value in values.items()
-    }
-    return observations, change
-
-
 def _fetch_yahoo_ticker(
     instrument_id: str,
     ticker: str,
@@ -146,7 +97,9 @@ def _fetch_yahoo_ticker(
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
     try:
         response = getter(
-            url, params={"range": "2d", "interval": "1m"}, timeout=3,
+            url,
+            params={"range": "2d", "interval": "1m"},
+            timeout=3,
             headers={"User-Agent": "Mozilla/5.0"},
         )
         response.raise_for_status()
@@ -160,13 +113,12 @@ def _fetch_yahoo_ticker(
         value = float(np.mean([point[1] for point in tail]))
         stamp = datetime.fromtimestamp(tail[-1][0], tz=KST)
         status = "LIVE" if now - stamp <= timedelta(minutes=10) else "DELAYED"
-        return Observation(instrument_id, round(value, 4), status, f"Yahoo {ticker}", stamp)
+        return Observation(instrument_id, round(value, 4), status, f"Yahoo Finance {ticker}", stamp)
     except Exception:
         return None
 
 
 def fetch_yahoo_yields(now: datetime | None = None) -> dict[str, Observation]:
-    """Best-effort Yahoo adapter; unsupported/rate-limited tickers simply return no row."""
     now = (now or datetime.now(KST)).astimezone(KST)
     with ThreadPoolExecutor(max_workers=len(YAHOO_TICKERS)) as pool:
         jobs = [pool.submit(_fetch_yahoo_ticker, key, ticker, now) for key, ticker in YAHOO_TICKERS.items()]
@@ -180,7 +132,6 @@ def _fetch_naver_ticker(
     now: datetime,
     getter: Callable = requests.get,
 ) -> tuple[Observation, float] | None:
-    """Read the public Naver Pay Securities/Refinitiv intraday bond chart."""
     url = "https://m.stock.naver.com/front-api/chart/pricesByPeriod"
     try:
         response = getter(
@@ -241,16 +192,73 @@ def fetch_naver_yields(now: datetime | None = None) -> tuple[dict[str, Observati
     return observations, previous
 
 
+def _fetch_ecos_item(
+    instrument_id: str,
+    item_code: str,
+    api_key: str,
+    now: datetime,
+    getter: Callable = requests.get,
+) -> Observation | None:
+    end = now.strftime("%Y%m%d")
+    start = (now - timedelta(days=14)).strftime("%Y%m%d")
+    url = (
+        "https://ecos.bok.or.kr/api/StatisticSearch/"
+        f"{api_key}/json/kr/1/10/{ECOS_STAT_CODE}/D/{start}/{end}/{item_code}"
+    )
+    try:
+        response = getter(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
+        response.raise_for_status()
+        payload = response.json()
+        rows = payload.get("StatisticSearch", {}).get("row") or []
+        usable = [row for row in rows if row.get("DATA_VALUE") not in (None, "")]
+        if not usable:
+            return None
+        latest = max(usable, key=lambda row: row["TIME"])
+        as_of = datetime.strptime(latest["TIME"], "%Y%m%d").replace(hour=16, tzinfo=KST)
+        return Observation(
+            instrument_id=instrument_id,
+            value=round(float(latest["DATA_VALUE"]), 4),
+            status="DELAYED",
+            source=f"한국은행 ECOS {ECOS_STAT_CODE} {latest.get('ITEM_NAME1', item_code)}",
+            as_of=as_of,
+        )
+    except Exception:
+        return None
+
+
+def fetch_ecos_yields(
+    api_key: str | None = None,
+    now: datetime | None = None,
+) -> dict[str, Observation]:
+    """Fetch official daily KTB yields from Bank of Korea ECOS.
+
+    ECOS is an official daily data source, not a tick-by-tick intraday feed. If no
+    key is supplied, the public "sample" key is used with its 10-row limit.
+    """
+    now = (now or datetime.now(KST)).astimezone(KST)
+    key = api_key or os.getenv("BOK_API_KEY") or os.getenv("ECOS_API_KEY") or "sample"
+    with ThreadPoolExecutor(max_workers=len(ECOS_KTB_ITEM_CODES)) as pool:
+        jobs = [
+            pool.submit(_fetch_ecos_item, instrument_id, item_code, key, now)
+            for instrument_id, item_code in ECOS_KTB_ITEM_CODES.items()
+        ]
+    observations = [job.result() for job in jobs]
+    return {item.instrument_id: item for item in observations if item is not None}
+
+
 def fetch_kofia_baseline(timeout: float = 5.0) -> dict[str, float]:
-    """Best-effort parser for public KOFIA tables; failure is an expected fallback path."""
+    """Best-effort public KOFIA parser. It never fabricates missing values."""
     url = "https://www.kofiabond.or.kr/html/MAIN.html"
     response = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
     response.raise_for_status()
     tables = pd.read_html(io.StringIO(response.text))
     result: dict[str, float] = {}
     aliases = {
-        "국고채권3년": "KTB_3Y", "국고채권5년": "KTB_5Y", "국고채권10년": "KTB_10Y",
-        "국고채권20년": "KTB_20Y", "국고채권30년": "KTB_30Y",
+        "국고채권3년": "KTB_3Y",
+        "국고채권5년": "KTB_5Y",
+        "국고채권10년": "KTB_10Y",
+        "국고채권20년": "KTB_20Y",
+        "국고채권30년": "KTB_30Y",
     }
     for table in tables:
         for _, row in table.astype(str).iterrows():
@@ -286,51 +294,47 @@ def build_snapshot(
     yahoo: dict[str, Observation] | None = None,
     naver: dict[str, Observation] | None = None,
     naver_previous: dict[str, float] | None = None,
+    ecos: dict[str, Observation] | None = None,
     kofia: dict[str, float] | None = None,
     admin_override: dict[str, float] | None = None,
 ) -> MarketSnapshot:
     now = (now or datetime.now(KST)).astimezone(KST)
     market_ts = effective_market_time(now)
-    baseline = dict(BUNDLED_BASELINE)
-    source = {key: ("MOCK", "내장 데모 기준값") for key in baseline}
-    if kofia:
-        for key, value in kofia.items():
-            if key in baseline:
-                baseline[key] = value
-                source[key] = ("MOCK", "KOFIA 종가 기반 모킹")
-    if admin_override:
-        for key, value in admin_override.items():
-            if key in baseline:
-                baseline[key] = value
-                source[key] = ("MOCK", "관리자 종가 기반 모킹")
     observations: dict[str, Observation] = {}
-    for key, base_value in baseline.items():
-        status, label = source[key]
-        observations[key] = Observation(
-            key, five_minute_mock_sma(key, base_value, market_ts), status, label, market_ts
-        )
+
+    for key, observation in (ecos or {}).items():
+        if key in INSTRUMENTS:
+            observations[key] = observation
+
+    for key, value in (kofia or {}).items():
+        if key in INSTRUMENTS:
+            observations[key] = Observation(key, value, "DELAYED", "금융투자협회 공시", market_ts)
+
+    for key, value in (admin_override or {}).items():
+        if key in INSTRUMENTS:
+            observations[key] = Observation(key, value, "CSV", "관리자 CSV", market_ts)
+
     for key, observation in (naver or {}).items():
-        if key in observations:
+        if key in INSTRUMENTS:
             observations[key] = observation
+
     for key, observation in (yahoo or {}).items():
-        if key in observations:
+        if key in INSTRUMENTS:
             observations[key] = observation
-    futures, change = _futures_observations(market_ts)
-    observations.update(futures)
-    previous = dict(PREVIOUS_CLOSE)
+
+    previous: dict[str, float] = {}
+    for key, observation in observations.items():
+        if key.startswith("KTB_") and observation.value is not None:
+            previous[key] = observation.value
     for key, value in (naver_previous or {}).items():
-        if key in previous:
+        if key in INSTRUMENTS:
             previous[key] = value
-    for key in previous:
-        if kofia and key in kofia:
-            previous[key] = kofia[key]
-        if admin_override and key in admin_override:
-            previous[key] = admin_override[key]
-    return MarketSnapshot(observations, previous, change, now)
+
+    return MarketSnapshot(observations, previous, None, now)
 
 
-def safe_provider(provider: Callable[[], dict], default: dict | None = None) -> dict:
+def safe_provider(provider: Callable, default=None):
     try:
         return provider()
     except Exception:
-        return default or {}
+        return default if default is not None else {}

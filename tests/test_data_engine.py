@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from bond_dashboard.data_engine import (
-    _fetch_naver_ticker, _fetch_yahoo_ticker, build_snapshot, effective_market_time, parse_admin_csv,
+    _fetch_ecos_item, _fetch_naver_ticker, _fetch_yahoo_ticker, build_snapshot, effective_market_time, parse_admin_csv,
 )
 
 KST = ZoneInfo("Asia/Seoul")
@@ -20,12 +20,18 @@ def test_weekend_freezes_at_previous_close():
     assert one.values == two.values
 
 
-def test_admin_override_is_mock_and_changes_baseline():
+def test_empty_snapshot_does_not_fabricate_values():
     ts = datetime(2026, 6, 22, 10, 0, tzinfo=KST)
-    base = build_snapshot(ts)
+    snapshot = build_snapshot(ts)
+    assert snapshot.values == {}
+    assert snapshot.observations == {}
+
+
+def test_admin_override_is_csv_real_input():
+    ts = datetime(2026, 6, 22, 10, 0, tzinfo=KST)
     changed = build_snapshot(ts, admin_override={"KTB_3Y": 4.0})
-    assert changed.values["KTB_3Y"] > base.values["KTB_3Y"] + 0.7
-    assert changed.observations["KTB_3Y"].status == "MOCK"
+    assert changed.values["KTB_3Y"] == 4.0
+    assert changed.observations["KTB_3Y"].status == "CSV"
 
 
 def test_csv_validation():
@@ -78,6 +84,25 @@ def test_naver_payload_uses_five_minute_time_window():
     assert observation.value == 3.35
     assert observation.status == "LIVE"
     assert previous == 3.0
+
+
+def test_ecos_payload_uses_latest_official_daily_value():
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"StatisticSearch": {"row": [
+                {"TIME": "20260621", "DATA_VALUE": "3.70", "ITEM_NAME1": "국고채(3년)"},
+                {"TIME": "20260624", "DATA_VALUE": "3.81", "ITEM_NAME1": "국고채(3년)"},
+            ]}}
+
+    now = datetime(2026, 6, 25, 10, 0, tzinfo=KST)
+    observation = _fetch_ecos_item("KTB_3Y", "010200000", "sample", now, getter=lambda *a, **k: Response())
+    assert observation is not None
+    assert observation.value == 3.81
+    assert observation.status == "DELAYED"
+    assert "한국은행 ECOS" in observation.source
 
 
 def test_yahoo_overrides_naver_and_naver_supplies_previous_close():

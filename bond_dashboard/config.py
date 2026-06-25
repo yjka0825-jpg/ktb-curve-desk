@@ -13,6 +13,9 @@ INSTRUMENTS = {
     "SPECIAL_AAA_10Y": {"label": "특수채 AAA 10Y", "unit": "%", "kind": "yield", "tenor": 10},
     "SPECIAL_AAA_20Y": {"label": "특수채 AAA 20Y", "unit": "%", "kind": "yield", "tenor": 20},
     "SPECIAL_AAA_30Y": {"label": "특수채 AAA 30Y", "unit": "%", "kind": "yield", "tenor": 30},
+    "KTBF3_PRICE": {"label": "3년 국채선물", "unit": "pt", "kind": "future", "tenor": 3},
+    "KTBF10_PRICE": {"label": "10년 국채선물", "unit": "pt", "kind": "future", "tenor": 10},
+    "KTBF10_FOREIGN_NET": {"label": "10년 선물 외국인 누적", "unit": "계약", "kind": "flow", "tenor": 10},
 }
 
 YAHOO_TICKERS = {
@@ -31,30 +34,18 @@ NAVER_REUTERS_CODES = {
     "KTB_30Y": "KR30YT=RR",
 }
 
-# This is deliberately a demo anchor, not represented as an observed market close.
-BUNDLED_BASELINE = {
-    "KTB_3Y": 3.180,
-    "KTB_5Y": 3.205,
-    "KTB_10Y": 3.235,
-    "KTB_20Y": 3.185,
-    "KTB_30Y": 3.170,
-    "CORP_AA0_5Y": 3.645,
-    "CORP_AA0_10Y": 3.755,
-    "SPECIAL_AAA_10Y": 3.455,
-    "SPECIAL_AAA_20Y": 3.425,
-    "SPECIAL_AAA_30Y": 3.415,
-}
-
-PREVIOUS_CLOSE = {
-    "KTB_3Y": 3.165,
-    "KTB_5Y": 3.195,
-    "KTB_10Y": 3.225,
-    "KTB_20Y": 3.180,
-    "KTB_30Y": 3.175,
+ECOS_STAT_CODE = "817Y002"
+ECOS_KTB_ITEM_CODES = {
+    "KTB_3Y": "010200000",
+    "KTB_5Y": "010200001",
+    "KTB_10Y": "010210000",
+    "KTB_20Y": "010220000",
+    "KTB_30Y": "010230000",
 }
 
 STATUS_LABELS = {
     "LIVE": "LIVE",
-    "DELAYED": "지연",
-    "MOCK": "MOCK",
+    "DELAYED": "지연/공식일별",
+    "CSV": "관리자 CSV",
+    "EMPTY": "실데이터 없음",
 }

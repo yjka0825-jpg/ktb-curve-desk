@@ -1,97 +1,44 @@
 {
-  "generated_at": "2026-06-20T15:57:00+09:00",
-  "market_open": false,
+  "generated_at": "2026-06-25T11:13:00+09:00",
+  "market_open": true,
   "observations": {
     "KTB_3Y": {
-      "value": 3.786,
-      "status": "DELAYED",
+      "value": 3.7397,
+      "status": "LIVE",
       "source": "Naver Pay·Refinitiv KR3YT=RR",
-      "as_of": "2026-06-19T16:19:00+09:00"
+      "as_of": "2026-06-25T11:09:00+09:00"
     },
     "KTB_5Y": {
-      "value": 4.005,
-      "status": "DELAYED",
+      "value": 3.9943,
+      "status": "LIVE",
       "source": "Naver Pay·Refinitiv KR5YT=RR",
-      "as_of": "2026-06-19T16:11:00+09:00"
+      "as_of": "2026-06-25T11:13:00+09:00"
     },
     "KTB_10Y": {
-      "value": 4.1763,
-      "status": "DELAYED",
+      "value": 4.1277,
+      "status": "LIVE",
       "source": "Naver Pay·Refinitiv KR10YT=RR",
-      "as_of": "2026-06-19T15:49:00+09:00"
+      "as_of": "2026-06-25T11:12:00+09:00"
     },
     "KTB_20Y": {
-      "value": 4.262,
-      "status": "DELAYED",
+      "value": 4.2753,
+      "status": "LIVE",
       "source": "Naver Pay·Refinitiv KR20YT=RR",
-      "as_of": "2026-06-19T15:50:00+09:00"
+      "as_of": "2026-06-25T11:13:00+09:00"
     },
     "KTB_30Y": {
-      "value": 4.261,
-      "status": "DELAYED",
+      "value": 4.288,
+      "status": "LIVE",
       "source": "Naver Pay·Refinitiv KR30YT=RR",
-      "as_of": "2026-06-19T16:16:00+09:00"
-    },
-    "CORP_AA0_5Y": {
-      "value": 4.445,
-      "status": "MOCK",
-      "source": "KOFIA 스프레드 기준 모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
-    },
-    "CORP_AA0_10Y": {
-      "value": 4.6963,
-      "status": "MOCK",
-      "source": "KOFIA 스프레드 기준 모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
-    },
-    "SPECIAL_AAA_10Y": {
-      "value": 4.3963,
-      "status": "MOCK",
-      "source": "KOFIA 스프레드 기준 모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
-    },
-    "SPECIAL_AAA_20Y": {
-      "value": 4.502,
-      "status": "MOCK",
-      "source": "KOFIA 스프레드 기준 모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
-    },
-    "SPECIAL_AAA_30Y": {
-      "value": 4.511,
-      "status": "MOCK",
-      "source": "KOFIA 스프레드 기준 모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
-    },
-    "KTBF3_PRICE": {
-      "value": 104.742,
-      "status": "MOCK",
-      "source": "KOFIA 기준 모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
-    },
-    "KTBF10_PRICE": {
-      "value": 109.63,
-      "status": "MOCK",
-      "source": "KOFIA 기준 모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
-    },
-    "KTBF10_5M_CHANGE": {
-      "value": 0.03,
-      "status": "MOCK",
-      "source": "모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
-    },
-    "KTBF10_FOREIGN_NET": {
-      "value": -615,
-      "status": "MOCK",
-      "source": "장중 누적 모킹",
-      "as_of": "2026-06-20T15:57:00+09:00"
+      "as_of": "2026-06-25T11:13:00+09:00"
     }
   },
   "previous_close": {
-    "KTB_3Y": 3.757,
-    "KTB_5Y": 3.935,
-    "KTB_10Y": 4.115,
-    "KTB_20Y": 4.206,
-    "KTB_30Y": 4.175
-  }
+    "KTB_3Y": 3.776,
+    "KTB_5Y": 4.017,
+    "KTB_10Y": 4.165,
+    "KTB_20Y": 4.319,
+    "KTB_30Y": 4.341
+  },
+  "notice": "실데이터가 없는 항목은 비워 둡니다. 모킹 데이터는 생성하지 않습니다."
 }

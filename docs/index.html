@@ -1,56 +1,114 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>KTB Curve Desk</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
-    :root{--bg:#07111f;--panel:#0d1c2d;--line:#1c3551;--text:#e5edf7;--muted:#8fa6c0;--mint:#52e0c4;--red:#ef4444;--yellow:#f59e0b;--green:#22c55e}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif}.wrap{max-width:1440px;margin:auto;padding:22px}
-    .hero{padding:22px;border:1px solid #18314f;border-radius:18px;background:radial-gradient(circle at top right,#123453 0,#0b1c30 42%,#091523 100%)}
-    .eyebrow{color:#51d6c3;font-size:12px;letter-spacing:.14em;font-weight:800}.hero h1{font-size:clamp(24px,4vw,40px);margin:5px 0}.muted{color:var(--muted);font-size:13px}.badges{display:inline-flex;gap:5px;margin-left:7px}.badge{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800}.LIVE{background:#0d4d43;color:#63f2d6}.DELAYED{background:#594413;color:#ffd56a}.MOCK{background:#532332;color:#ff91ad}
-    h2{font-size:18px;margin:28px 0 12px}.alerts{display:grid;gap:8px}.alert{border-left:4px solid var(--red);padding:12px 16px;background:#101f31;border-radius:0 12px 12px 0}.alert b{display:block;margin-bottom:4px}.alert span{font-size:14px;color:#b8c7d9;line-height:1.5}
-    .grid{display:grid;gap:12px}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:2fr 1fr}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}.label{font-size:12px;color:var(--muted)}.value{font-size:22px;font-weight:800;margin-top:6px}.small{font-size:12px;color:var(--muted)}
-    .controls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:#0b1929;border:1px solid var(--line);border-radius:16px;padding:16px}.field label{display:block;color:#b8c7d9;font-size:13px;margin-bottom:7px}.field input{width:100%;background:#071522;border:1px solid #294463;border-radius:9px;color:white;padding:11px;font-size:15px}.btn{height:43px;margin-top:24px;background:var(--mint);color:#05231e;border:0;border-radius:9px;font-weight:900;cursor:pointer}
-    #curve{width:100%;min-height:420px;background:#0a1727;border-radius:12px}.signal{display:flex;align-items:center;gap:12px}.dot{width:24px;height:24px;border-radius:50%;box-shadow:0 0 18px currentColor}.signal strong{font-size:18px}.metric{margin-top:12px}.metric .value{font-size:19px}
-    table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:9px;border-bottom:1px solid #18304b}th{color:var(--muted)}.log{padding:13px 0;border-bottom:1px solid #1a3049}.log p{margin:5px 0;color:#b8c7d9;font-size:13px;line-height:1.5}.toast{position:fixed;right:20px;top:20px;background:#10263c;border:1px solid #2d4c6e;padding:12px 16px;border-radius:10px;z-index:9;opacity:0;transform:translateY(-10px);transition:.25s}.toast.show{opacity:1;transform:none}.footer{margin:30px 0 10px;color:var(--muted);font-size:12px;line-height:1.5}
-    @media(max-width:900px){.g4,.g3{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}}
-    @media(max-width:560px){.wrap{padding:11px}.g4,.g3,.controls{grid-template-columns:1fr}.hero{padding:16px}.btn{margin-top:5px}#curve{min-height:320px}.value{font-size:19px}}
+    :root{color-scheme:dark;--bg:#07111f;--panel:#0d1c2d;--line:#1b324c;--text:#e5edf7;--muted:#8fa6c0;--mint:#52e0c4}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif}
+    main{max-width:1440px;margin:0 auto;padding:18px}.hero{padding:18px;border:1px solid #18314f;border-radius:20px;background:radial-gradient(circle at top right,#123453 0,#0b1c30 42%,#091523 100%)}
+    .eyebrow{color:#51d6c3;font-size:12px;letter-spacing:.14em;font-weight:800}.hero h1{margin:6px 0;font-size:clamp(24px,4vw,38px)}.muted{color:var(--muted);font-size:14px}
+    .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;margin-left:5px}.LIVE{background:#0d4d43;color:#63f2d6}.DELAYED{background:#594413;color:#ffd56a}.EMPTY{background:#364152;color:#cbd5e1}
+    .notice{margin:14px 0;padding:12px 14px;border:1px solid #24415f;border-radius:14px;background:#0b1929;color:#cfe4ff}
+    .grid{display:grid;gap:14px}.cols4{grid-template-columns:repeat(4,1fr)}.cols3{grid-template-columns:repeat(3,1fr)}.mainGrid{grid-template-columns:3fr 1fr}.bottom{grid-template-columns:1.4fr 1fr}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}.metricLabel{color:var(--muted);font-size:13px}.metricValue{font-size:24px;font-weight:850;margin-top:6px}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid #284764;background:#091523;color:var(--text);font-size:16px}button{width:100%;padding:13px;border:0;border-radius:12px;background:#12bfa5;color:#06231e;font-weight:900;font-size:16px;cursor:pointer}
+    h2{font-size:20px;margin:22px 0 10px}.signal{display:flex;gap:12px;align-items:center}.dot{width:24px;height:24px;border-radius:999px;box-shadow:0 0 18px currentColor}
+    .alert{border-left:4px solid #ef4444;background:#101f31;border-radius:0 12px 12px 0;padding:12px 14px;margin:8px 0}.alert strong{display:block;margin-bottom:4px}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid #19314c;padding:8px;text-align:left}th{color:#a9bdd4}.right{text-align:right}.blank{color:#7893b2}
+    @media(max-width:820px){main{padding:10px}.cols4,.cols3,.mainGrid,.bottom{grid-template-columns:1fr}.metricValue{font-size:21px}}
   </style>
 </head>
-<body><div id="toast" class="toast"></div><main class="wrap">
-  <section class="hero"><div class="eyebrow">INSURANCE FIXED INCOME · CURVE DESK</div><h1>국고채 전 만기 일드 커브 & 기간 프리미엄</h1><div id="statusLine" class="muted">데이터를 불러오는 중입니다…</div></section>
-  <h2>현재 활성 경보</h2><section id="alerts" class="alerts"></section>
-  <h2>집행 컨트롤러</h2><section class="controls">
-    <div class="field"><label>당월 총 집행 한도(억원)</label><input id="limit" type="number" min="0" step="10"></div>
-    <div class="field"><label>당일 집행 금액(억원)</label><input id="execution" type="number" min="0" step="1" value="0"></div>
-    <div class="field"><label>목표 듀레이션 갭(년)</label><input id="gap" type="number" step=".1" value="0"></div>
-    <button class="btn" id="execute">집행 업데이트</button>
+<body>
+<main>
+  <section class="hero">
+    <div class="eyebrow">INSURANCE FIXED INCOME · CURVE DESK</div>
+    <h1>국고채 전 만기 일드 커브 & 기간 프리미엄</h1>
+    <div class="muted" id="statusLine">데이터 로딩 중...</div>
   </section>
-  <section class="grid g4" id="budgetCards" style="margin-top:12px"></section>
-  <h2>메인 커브</h2><section class="grid g2"><div class="card"><svg id="curve" role="img" aria-label="국고채 일드 커브"></svg></div><div class="card"><div id="traffic"></div><div id="premiumMetrics"></div></div></section>
-  <h2>스프레드 모니터</h2><section id="spreadCards" class="grid g3"></section>
-  <h2>국채선물 · 외국인 수급</h2><section id="futureCards" class="grid g4"></section>
-  <section class="grid g2"><div><h2>액션 가이드 로그</h2><div id="logs" class="card"></div></div><div><h2>데이터 출처</h2><div class="card" style="overflow:auto"><table><thead><tr><th>자산</th><th>값</th><th>상태</th><th>기준시각</th></tr></thead><tbody id="sources"></tbody></table></div></div></section>
-  <p class="footer">본 화면은 투자판단 참고용이며 무료 외부 소스의 지연·누락 시 모의 데이터가 사용됩니다. MOCK 값은 실제 체결·호가가 아니며 최종 투자 결정 전 공식 원천을 확인하세요. 데이터 갱신은 GitHub Actions 실행 사정에 따라 5분보다 늦어질 수 있습니다.</p>
+  <div class="notice">가짜 데이터는 표시하지 않습니다. 한국은행 ECOS 공식 일별금리와 네이버페이증권/Refinitiv 장중값이 연결될 때만 값을 표시하고, 회사채·특수채·국채선물은 실데이터가 없으면 빈값으로 둡니다.</div>
+
+  <h2>집행 컨트롤러</h2>
+  <section class="grid cols4">
+    <div class="card"><label class="metricLabel">당월 총 집행 한도(억원)</label><input id="limit" type="number" min="0" step="10" /></div>
+    <div class="card"><label class="metricLabel">당일 집행 금액(억원)</label><input id="execution" type="number" min="0" step="1" /></div>
+    <div class="card"><label class="metricLabel">목표 듀레이션 갭(년)</label><input id="gap" type="number" step="0.1" /></div>
+    <div class="card"><label class="metricLabel">&nbsp;</label><button id="execute">집행 업데이트</button></div>
+  </section>
+  <section class="grid cols4" style="margin-top:14px">
+    <div class="card"><div class="metricLabel">월 한도</div><div class="metricValue" id="limitView">—</div></div>
+    <div class="card"><div class="metricLabel">누적 집행</div><div class="metricValue" id="spentView">—</div></div>
+    <div class="card"><div class="metricLabel">잔여 가능액</div><div class="metricValue" id="remainView">—</div></div>
+    <div class="card"><div class="metricLabel">목표 듀레이션 갭</div><div class="metricValue" id="gapView">—</div></div>
+  </section>
+
+  <div id="alerts"></div>
+
+  <h2>메인 커브</h2>
+  <section class="grid mainGrid">
+    <div class="card"><div id="curve" style="height:430px"></div></div>
+    <div class="card">
+      <div class="signal"><div class="dot" id="lightDot"></div><div><div class="metricLabel">기간 프리미엄 상태</div><div class="metricValue" id="lightText">—</div></div></div>
+      <div style="height:12px"></div>
+      <div class="metricLabel">30Y - 3Y</div><div class="metricValue" id="s303">—</div>
+      <div class="metricLabel">30Y - 10Y</div><div class="metricValue" id="s3010">—</div>
+      <div class="metricLabel">20Y - 30Y</div><div class="metricValue" id="s2030">—</div>
+    </div>
+  </section>
+
+  <h2>스프레드 모니터</h2>
+  <section class="grid cols3" id="spreadCards"></section>
+
+  <h2>국채선물 · 외국인 수급</h2>
+  <section class="grid cols4" id="futureCards"></section>
+
+  <section class="grid bottom">
+    <div>
+      <h2>액션 가이드 로그</h2>
+      <div class="card" id="guideLog">이번 접속에서 발생한 액션 가이드가 없습니다.</div>
+    </div>
+    <div>
+      <h2>데이터 출처</h2>
+      <div class="card"><table><thead><tr><th>자산</th><th>값</th><th>상태</th><th>출처</th></tr></thead><tbody id="sourceRows"></tbody></table></div>
+    </div>
+  </section>
 </main>
 <script>
-const labels={KTB_3Y:'국고채 3Y',KTB_5Y:'국고채 5Y',KTB_10Y:'국고채 10Y',KTB_20Y:'국고채 20Y',KTB_30Y:'국고채 30Y',CORP_AA0_5Y:'무보증 AA0 5Y',CORP_AA0_10Y:'무보증 AA0 10Y',SPECIAL_AAA_10Y:'특수채 AAA 10Y',SPECIAL_AAA_20Y:'특수채 AAA 20Y',SPECIAL_AAA_30Y:'특수채 AAA 30Y',KTBF3_PRICE:'3년 국채선물',KTBF10_PRICE:'10년 국채선물',KTBF10_5M_CHANGE:'10년 선물 5분 변화',KTBF10_FOREIGN_NET:'외인 10년 누적'};
-const fmt=(n,d=1)=>(n>=0?'+':'')+Number(n).toFixed(d);const bp=(a,b)=>(a-b)*100;let market=null;
-function spreads(v){return {'30Y-3Y':bp(v.KTB_30Y,v.KTB_3Y),'10Y-3Y':bp(v.KTB_10Y,v.KTB_3Y),'30Y-10Y':bp(v.KTB_30Y,v.KTB_10Y),'20Y-30Y':bp(v.KTB_20Y,v.KTB_30Y),'AA0 5Y-국고 5Y':bp(v.CORP_AA0_5Y,v.KTB_5Y),'AA0 10Y-국고 10Y':bp(v.CORP_AA0_10Y,v.KTB_10Y),'특수 AAA 10Y-국고 10Y':bp(v.SPECIAL_AAA_10Y,v.KTB_10Y),'특수 AAA 20Y-국고 20Y':bp(v.SPECIAL_AAA_20Y,v.KTB_20Y),'특수 AAA 30Y-국고 30Y':bp(v.SPECIAL_AAA_30Y,v.KTB_30Y),'선물 10Y-3Y':v.KTBF10_PRICE-v.KTBF3_PRICE}}
-function alertList(s,v){let a=[];if(s['30Y-3Y']<=10)a.push(['term','🚨 기간 프리미엄 축소 경보','장기 보유 대가가 너무 적습니다. 30년물 신규 매수를 제한하고, 단기물(3Y/5Y) 또는 고금리 은행채(AAA)로 롤오버하며 관망을 권장합니다.']);if(s['30Y-10Y']<=0)a.push(['ultra','💡 초장기 수급 왜곡 경보','초장기물 과열 상태입니다. 부채 매칭용 30년물 추격 매수를 멈추고, 10년물이나 MBS 입찰 우회를 검토하세요.']);if(s['20Y-30Y']>=0)a.push(['belly','🟢 20Y 벨리 매수 시그널','20년물 금리가 30년물을 역전하여 밸류에이션 매력이 극대화되었습니다. 듀레이션 갭 조절용 적극 매수 구간입니다.']);if(v.KTBF10_5M_CHANGE<=-.15||v.KTBF10_FOREIGN_NET<=-3000)a.push(['crash','📉 국채선물 장중 폭락 경보','외인 국채선물 대량 매도 및 가격 폭락으로 장중 금리 급등 추세가 강합니다. 현물 매수 호가를 하향 조정하여 보수적으로 대응하세요.']);if(v.KTBF10_5M_CHANGE>=.15||v.KTBF10_FOREIGN_NET>=3000)a.push(['surge','📈 국채선물 장중 폭등 경보','외인 대량 매수로 가격 폭등 및 장중 금리 급락 추세입니다. 당일 입찰 비딩 금리를 계획보다 0.5bp~1bp 낮춰 써내기를 권장합니다.']);return a}
-function card(label,value,sub=''){return `<div class="card"><div class="label">${label}</div><div class="value">${value}</div>${sub?`<div class="small">${sub}</div>`:''}</div>`}
-function budgetKey(){return 'ktb-budget-'+new Date().toLocaleDateString('sv').slice(0,7)}function readBudget(){let b={limit:0,spent:0,gap:0};try{b={...b,...JSON.parse(localStorage.getItem(budgetKey()))}}catch{}return b}function loadBudget(){let b=readBudget();['limit','gap'].forEach(k=>document.getElementById(k).value=b[k]);renderBudget(b);return b}function renderBudget(b){document.getElementById('budgetCards').innerHTML=card('월 한도',b.limit.toLocaleString()+' 억원')+card('누적 집행',b.spent.toLocaleString()+' 억원')+card('잔여 가능액',(b.limit-b.spent).toLocaleString()+' 억원')+card('목표 듀레이션 갭',fmt(b.gap)+' 년')}
-document.getElementById('execute').onclick=()=>{let b=readBudget(),limit=+document.getElementById('limit').value,ex=+document.getElementById('execution').value,gap=+document.getElementById('gap').value;if([limit,ex].some(x=>x<0)||b.spent+ex>limit){toast('월 잔여 한도를 확인하세요.');return}b={limit,spent:b.spent+ex,gap};localStorage.setItem(budgetKey(),JSON.stringify(b));document.getElementById('execution').value=0;renderBudget(b);toast(ex.toLocaleString()+'억원 집행을 반영했습니다.')}
-function toast(t){let e=document.getElementById('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600)}
-function drawCurve(cur,prev){let svg=document.getElementById('curve'),W=900,H=420,p=55,all=cur.concat(prev),min=Math.min(...all)-.04,max=Math.max(...all)+.04,x=i=>p+i*(W-2*p)/4,y=v=>H-p-(v-min)*(H-2*p)/(max-min),poly=(arr,c,d='')=>`<polyline fill="none" stroke="${c}" stroke-width="${c==='#52e0c4'?4:2}" ${d} points="${arr.map((v,i)=>x(i)+','+y(v)).join(' ')}"/>`;
-let html=`<rect width="100%" height="100%" fill="#0a1727"/>`;for(let i=0;i<5;i++){let gy=p+i*(H-2*p)/4,val=max-i*(max-min)/4;html+=`<line x1="${p}" y1="${gy}" x2="${W-p}" y2="${gy}" stroke="#18304b"/><text x="8" y="${gy+4}" fill="#8fa6c0" font-size="12">${val.toFixed(2)}%</text>`}html+=poly(prev,'#7893b2','stroke-dasharray="7 6"')+poly(cur,'#52e0c4');['3Y','5Y','10Y','20Y','30Y'].forEach((t,i)=>{html+=`<circle cx="${x(i)}" cy="${y(cur[i])}" r="6" fill="#52e0c4"/><text x="${x(i)}" y="${H-18}" text-anchor="middle" fill="#b8c7d9" font-size="13">${t}</text>`});html+=`<text x="${W-250}" y="22" fill="#52e0c4" font-size="13">━ 현재 5분 SMA</text><text x="${W-125}" y="22" fill="#7893b2" font-size="13">┄ 전일 종가</text>`;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.innerHTML=html}
-function render(data){market=data;let o=data.observations,v=Object.fromEntries(Object.entries(o).map(([k,x])=>[k,+x.value])),s=spreads(v),counts={LIVE:0,DELAYED:0,MOCK:0};Object.values(o).forEach(x=>counts[x.status]++);let badges=Object.entries(counts).filter(x=>x[1]).map(([k,n])=>`<span class="badge ${k}">${k==='DELAYED'?'지연':k} ${n}</span>`).join('');document.getElementById('statusLine').innerHTML=`${data.market_open?'장중 갱신':'장 마감 · 값 고정'} · 최종 갱신 ${new Date(data.generated_at).toLocaleString('ko-KR')} KST <span class="badges">${badges}</span>`;
-let alerts=alertList(s,v);document.getElementById('alerts').innerHTML=alerts.length?alerts.map(a=>`<div class="alert"><b>${a[1]}</b><span>${a[2]}</span></div>`).join(''):'<div class="card">활성 경보가 없습니다.</div>';let prevIds=JSON.parse(sessionStorage.getItem('alerts')||'[]'),newA=alerts.filter(a=>!prevIds.includes(a[0]));sessionStorage.setItem('alerts',JSON.stringify(alerts.map(a=>a[0])));if(newA[0])toast(newA[0][1]);let logs=JSON.parse(sessionStorage.getItem('guideLogs')||'[]');newA.forEach(a=>logs.unshift({time:new Date().toLocaleTimeString('ko-KR'),title:a[1],guide:a[2],gap:+document.getElementById('gap').value||0}));logs=logs.slice(0,30);sessionStorage.setItem('guideLogs',JSON.stringify(logs));document.getElementById('logs').innerHTML=logs.length?logs.map(x=>`<div class="log"><b>${x.time} · ${x.title}</b><p>${x.guide}</p><span class="small">목표 듀레이션 갭 ${fmt(x.gap)}년</span></div>`).join(''):'<span class="muted">이번 접속에서 발생한 가이드가 없습니다.</span>';
-let red=s['30Y-10Y']<=0||s['30Y-3Y']<=0,yellow=!red&&s['30Y-3Y']<=10,color=red?'#ef4444':yellow?'#f59e0b':'#22c55e',name=red?'RED · 과열':yellow?'YELLOW · 축소':'GREEN · 적정';document.getElementById('traffic').innerHTML=`<div class="signal"><div class="dot" style="background:${color};color:${color}"></div><div><div class="label">기간 프리미엄 상태</div><strong>${name}</strong></div></div>`;document.getElementById('premiumMetrics').innerHTML=['30Y-3Y','30Y-10Y','20Y-30Y'].map(k=>`<div class="metric"><div class="label">${k}</div><div class="value">${fmt(s[k])} bp</div></div>`).join('');
-let ten=['KTB_3Y','KTB_5Y','KTB_10Y','KTB_20Y','KTB_30Y'];drawCurve(ten.map(k=>v[k]),ten.map(k=>data.previous_close[k]));let sn=['10Y-3Y','AA0 5Y-국고 5Y','AA0 10Y-국고 10Y','특수 AAA 10Y-국고 10Y','특수 AAA 20Y-국고 20Y','특수 AAA 30Y-국고 30Y'];document.getElementById('spreadCards').innerHTML=sn.map(k=>card(k,fmt(s[k])+' bp')).join('');document.getElementById('futureCards').innerHTML=card('3년 국채선물',v.KTBF3_PRICE.toFixed(2),'MOCK')+card('10년 국채선물',v.KTBF10_PRICE.toFixed(2),'5분 '+fmt(v.KTBF10_5M_CHANGE,2)+' · MOCK')+card('10Y - 3Y 가격 스프레드',fmt(s['선물 10Y-3Y'],3),'MOCK')+card('외인 10년 누적',Math.round(v.KTBF10_FOREIGN_NET).toLocaleString()+' 계약','MOCK');document.getElementById('sources').innerHTML=Object.entries(o).map(([k,x])=>`<tr><td title="${x.source}">${labels[k]||k}</td><td>${Number(x.value).toFixed(k.includes('FOREIGN')?0:3)}</td><td><span class="badge ${x.status}">${x.status==='DELAYED'?'지연':x.status}</span></td><td>${new Date(x.as_of).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</td></tr>`).join('')}
+const tenors=[3,5,10,20,30], ids=['KTB_3Y','KTB_5Y','KTB_10Y','KTB_20Y','KTB_30Y'];
+const labels={KTB_3Y:'국고채 3Y',KTB_5Y:'국고채 5Y',KTB_10Y:'국고채 10Y',KTB_20Y:'국고채 20Y',KTB_30Y:'국고채 30Y',CORP_AA0_5Y:'무보증 AA0 5Y',CORP_AA0_10Y:'무보증 AA0 10Y',SPECIAL_AAA_10Y:'특수채 AAA 10Y',SPECIAL_AAA_20Y:'특수채 AAA 20Y',SPECIAL_AAA_30Y:'특수채 AAA 30Y',KTBF3_PRICE:'3년 국채선물',KTBF10_PRICE:'10년 국채선물',KTBF10_FOREIGN_NET:'10년 선물 외국인 누적'};
 const naverCodes={KTB_3Y:'KR3YT=RR',KTB_5Y:'KR5YT=RR',KTB_10Y:'KR10YT=RR',KTB_20Y:'KR20YT=RR',KTB_30Y:'KR30YT=RR'};
+const ecosCodes={KTB_3Y:'010200000',KTB_5Y:'010200001',KTB_10Y:'010210000',KTB_20Y:'010220000',KTB_30Y:'010230000'};
+const allIds=[...Object.keys(labels)];
+const month=new Date().toLocaleString('sv-SE',{timeZone:'Asia/Seoul'}).slice(0,7), storageKey=`ktb-curve-budget-${month}`;
+let market={generated_at:new Date().toISOString(),observations:{},previous_close:{}}, activeIds=new Set(), guide=[];
+function n(v,d=1){return v===undefined||v===null||Number.isNaN(v)?'—':Number(v).toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function bp(a,b){return a!==undefined&&b!==undefined?+(100*(a-b)).toFixed(2):null}
+function spreadText(v,s=' bp'){return v===null||v===undefined?'—':`${v>=0?'+':''}${v.toFixed(1)}${s}`}
+function kstNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}))}
+function statusBadge(status){return status==='LIVE'?'LIVE':status==='DELAYED'?'지연/공식일별':'실데이터 없음'}
+function readBudget(){let saved=JSON.parse(localStorage.getItem(storageKey)||'{}');return {month,limit:+(saved.limit||0),spent:+(saved.spent||0),gap:+(saved.gap||0)}}
+function loadBudget(){let b=readBudget();limit.value=b.limit||'';execution.value='';gap.value=b.gap||'';paintBudget(b)}
+function paintBudget(b){limitView.textContent=`${n(b.limit)} 억원`;spentView.textContent=`${n(b.spent)} 억원`;remainView.textContent=`${n(Math.max(b.limit-b.spent,0))} 억원`;gapView.textContent=`${b.gap>=0?'+':''}${n(b.gap)} 년`}
+execute.onclick=()=>{let b=readBudget(),lim=+limit.value,ex=+execution.value,g=+gap.value;if(!Number.isFinite(lim)||lim<0||!Number.isFinite(ex)||ex<0)return alert('입력값을 확인하세요.');if(b.spent+ex>lim)return alert('월 잔여 한도를 확인하세요.');b={month,limit:lim,spent:b.spent+ex,gap:g};localStorage.setItem(storageKey,JSON.stringify(b));execution.value='';paintBudget(b)};
+function parseProxyText(text){let marker='Markdown Content:',i=text.indexOf(marker);if(i>=0)text=text.slice(i+marker.length).trim();let s=text.indexOf('{'),e=text.lastIndexOf('}');if(s>=0&&e>s)text=text.slice(s,e+1);return JSON.parse(text)}
 function naverTime(t){return new Date(`${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}T${t.slice(8,10)}:${t.slice(10,12)}:${t.slice(12,14)}+09:00`)}
-async function fetchNaver(id,code){let q=new URLSearchParams({reutersCode:code,category:'bond',chartInfoType:'governmentBond',scriptChartType:'day',_:Math.floor(Date.now()/300000)}),url=`https://r.jina.ai/https://m.stock.naver.com/front-api/chart/pricesByPeriod?${q}`,r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(r.status);let text=await r.text(),marker='Markdown Content:',start=text.indexOf(marker);if(start<0)throw Error('proxy format');let p=JSON.parse(text.slice(start+marker.length).trim()).result,pts=p.priceInfos.map(x=>[naverTime(x.localDateTime),+x.currentPrice]),latest=new Date(Math.max(...pts.map(x=>+x[0]))),window=pts.filter(x=>latest-x[0]<=300000),avg=window.reduce((a,x)=>a+x[1],0)/window.length,kst=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'})),mins=kst.getHours()*60+kst.getMinutes(),live=kst.getDay()>0&&kst.getDay()<6&&mins>=540&&mins<=945&&Date.now()-latest<=600000;return [id,{value:+avg.toFixed(4),status:live?'LIVE':'DELAYED',source:`Naver Pay·Refinitiv ${code} via Jina Reader`,as_of:latest.toISOString()},+p.lastClosePrice]}
-async function refreshNaverLive(){if(!market)return;try{let rows=await Promise.all(Object.entries(naverCodes).map(x=>fetchNaver(...x)));rows.forEach(([id,o,prev])=>{market.observations[id]=o;market.previous_close[id]=prev});let v=Object.fromEntries(Object.entries(market.observations).map(([k,x])=>[k,+x.value])),now=new Date(),stamp=now.toISOString(),mock=(id,value,source)=>market.observations[id]={value:+value.toFixed(4),status:'MOCK',source,as_of:stamp};mock('CORP_AA0_5Y',v.KTB_5Y+.44,'KOFIA 스프레드 기준 모킹');mock('CORP_AA0_10Y',v.KTB_10Y+.52,'KOFIA 스프레드 기준 모킹');mock('SPECIAL_AAA_10Y',v.KTB_10Y+.22,'KOFIA 스프레드 기준 모킹');mock('SPECIAL_AAA_20Y',v.KTB_20Y+.24,'KOFIA 스프레드 기준 모킹');mock('SPECIAL_AAA_30Y',v.KTB_30Y+.25,'KOFIA 스프레드 기준 모킹');let minute=now.getHours()*60+now.getMinutes(),wave=Math.sin(minute/34)*.08;mock('KTBF3_PRICE',104.72-wave*.3,'KOFIA 기준 모킹');mock('KTBF10_PRICE',111.35-(v.KTB_10Y-3.2)*1.7+wave,'KOFIA 기준 모킹');mock('KTBF10_5M_CHANGE',Math.sin(minute/11)*.09,'장중 변동 모킹');mock('KTBF10_FOREIGN_NET',Math.sin(minute/70)*2600+(minute-200)*3,'장중 누적 모킹');market.generated_at=stamp;render(market)}catch(e){console.warn('Naver refresh fallback',e)}}
-async function refresh(){try{let r=await fetch('./data/latest.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);render(await r.json());await refreshNaverLive()}catch(e){document.getElementById('statusLine').textContent='데이터를 불러오지 못했습니다. 잠시 후 자동 재시도합니다.'}}loadBudget();refresh();setInterval(refreshNaverLive,300000);
-</script></body></html>
+async function fetchNaver(id,code){let q=new URLSearchParams({reutersCode:code,category:'bond',chartInfoType:'governmentBond',scriptChartType:'day',_:Math.floor(Date.now()/300000)}),url=`https://r.jina.ai/https://m.stock.naver.com/front-api/chart/pricesByPeriod?${q}`,r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(r.status);let p=parseProxyText(await r.text()).result,pts=p.priceInfos.map(x=>[naverTime(x.localDateTime),+x.currentPrice]),latest=new Date(Math.max(...pts.map(x=>+x[0]))),window=pts.filter(x=>latest-x[0]<=300000),avg=window.reduce((a,x)=>a+x[1],0)/window.length,k=kstNow(),mins=k.getHours()*60+k.getMinutes(),live=k.getDay()>0&&k.getDay()<6&&mins>=540&&mins<=945&&Date.now()-latest<=600000;return [id,{value:+avg.toFixed(4),status:live?'LIVE':'DELAYED',source:`Naver Pay·Refinitiv ${code}`,as_of:latest.toISOString()},+p.lastClosePrice]}
+async function fetchEcos(id,code){let end=new Date().toLocaleString('sv-SE',{timeZone:'Asia/Seoul'}).slice(0,10).replaceAll('-',''),start=new Date(Date.now()-14*864e5).toLocaleString('sv-SE',{timeZone:'Asia/Seoul'}).slice(0,10).replaceAll('-',''),url=`https://r.jina.ai/https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/817Y002/D/${start}/${end}/${code}`,r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(r.status);let rows=parseProxyText(await r.text()).StatisticSearch?.row||[];rows=rows.filter(x=>x.DATA_VALUE);if(!rows.length)throw Error('empty');let row=rows.sort((a,b)=>a.TIME.localeCompare(b.TIME)).at(-1),asof=`${row.TIME.slice(0,4)}-${row.TIME.slice(4,6)}-${row.TIME.slice(6,8)}T16:00:00+09:00`;return [id,{value:+Number(row.DATA_VALUE).toFixed(4),status:'DELAYED',source:`한국은행 ECOS 817Y002 ${row.ITEM_NAME1||code}`,as_of:asof}]}
+async function refreshLive(){try{let ecos=await Promise.all(Object.entries(ecosCodes).map(x=>fetchEcos(...x)));ecos.forEach(([id,o])=>{market.observations[id]=o;market.previous_close[id]=o.value})}catch(e){console.warn('ECOS fallback failed',e)}
+try{let rows=await Promise.all(Object.entries(naverCodes).map(x=>fetchNaver(...x)));rows.forEach(([id,o,prev])=>{market.observations[id]=o;market.previous_close[id]=prev})}catch(e){console.warn('Naver refresh failed',e)}
+market.generated_at=new Date().toISOString();render()}
+function calc(){let v=Object.fromEntries(Object.entries(market.observations).filter(([_,o])=>o.value!==undefined&&o.value!==null).map(([k,o])=>[k,+o.value]));return {'30Y-3Y':bp(v.KTB_30Y,v.KTB_3Y),'10Y-3Y':bp(v.KTB_10Y,v.KTB_3Y),'30Y-10Y':bp(v.KTB_30Y,v.KTB_10Y),'20Y-30Y':bp(v.KTB_20Y,v.KTB_30Y),'AA0 5Y-국고 5Y':bp(v.CORP_AA0_5Y,v.KTB_5Y),'AA0 10Y-국고 10Y':bp(v.CORP_AA0_10Y,v.KTB_10Y),'특수 AAA 10Y-국고 10Y':bp(v.SPECIAL_AAA_10Y,v.KTB_10Y),'특수 AAA 20Y-국고 20Y':bp(v.SPECIAL_AAA_20Y,v.KTB_20Y),'특수 AAA 30Y-국고 30Y':bp(v.SPECIAL_AAA_30Y,v.KTB_30Y),'선물 10Y-3Y':v.KTBF10_PRICE!==undefined&&v.KTBF3_PRICE!==undefined?+(v.KTBF10_PRICE-v.KTBF3_PRICE).toFixed(3):null}}
+function alerts(s){let out=[];if(s['30Y-3Y']!==null&&s['30Y-3Y']<=10)out.push(['term','🚨 기간 프리미엄 축소 경보','장기 보유 대가가 너무 적습니다. 30년물 신규 매수를 제한하고, 단기물(3Y/5Y) 또는 고금리 은행채(AAA)로 롤오버하며 관망을 권장합니다.']);if(s['30Y-10Y']!==null&&s['30Y-10Y']<=0)out.push(['ultra','💡 초장기 수급 왜곡 경보','초장기물 과열 상태입니다. 부채 매칭용 30년물 추격 매수를 멈추고, 10년물이나 MBS 입찰 우회를 검토하세요.']);if(s['20Y-30Y']!==null&&s['20Y-30Y']>=0)out.push(['belly','🟢 20Y 벨리 매수 시그널','20년물 금리가 30년물을 역전하여 밸류에이션 매력이 극대화되었습니다. 듀레이션 갭 조절용 적극 매수 구간입니다.']);return out}
+function render(){let obs=market.observations,s=calc(),live=Object.values(obs).filter(o=>o.status==='LIVE').length,del=Object.values(obs).filter(o=>o.status==='DELAYED').length,empty=allIds.filter(id=>!obs[id]).length;statusLine.innerHTML=`최종 갱신 ${new Date(market.generated_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})} KST <span class="badge LIVE">LIVE ${live}</span><span class="badge DELAYED">지연/공식일별 ${del}</span><span class="badge EMPTY">실데이터 없음 ${empty}</span>`;
+let cur=ids.map(id=>obs[id]?.value??null),prev=ids.map(id=>market.previous_close[id]??null);Plotly.react('curve',[{x:tenors.map(x=>x+'Y'),y:cur,mode:'lines+markers',name:'현재 5분 SMA / ECOS 공식값',line:{color:'#52e0c4',width:4},connectgaps:false},{x:tenors.map(x=>x+'Y'),y:prev,mode:'lines+markers',name:'전일/최근 공식 기준',line:{color:'#7893b2',width:2,dash:'dash'},connectgaps:false}],{paper_bgcolor:'#07111f',plot_bgcolor:'#0a1727',font:{color:'#b8c7d9'},margin:{l:35,r:15,t:20,b:35},yaxis:{title:'수익률(%)',gridcolor:'#18304b'},xaxis:{title:'만기',gridcolor:'#18304b'},legend:{orientation:'h'}},{displayModeBar:false,responsive:true});
+let term=s['30Y-3Y'],ultra=s['30Y-10Y'],color='#94a3b8',txt='GRAY · 실데이터 대기';if(term!==null&&ultra!==null){if(ultra<=0||term<=0){color='#ef4444';txt='RED · 과열'}else if(term<=10){color='#f59e0b';txt='YELLOW · 축소'}else{color='#22c55e';txt='GREEN · 적정'}}lightDot.style.background=color;lightDot.style.color=color;lightText.textContent=txt;s303.textContent=spreadText(s['30Y-3Y']);s3010.textContent=spreadText(s['30Y-10Y']);s2030.textContent=spreadText(s['20Y-30Y']);
+spreadCards.innerHTML=['10Y-3Y','AA0 5Y-국고 5Y','AA0 10Y-국고 10Y','특수 AAA 10Y-국고 10Y','특수 AAA 20Y-국고 20Y','특수 AAA 30Y-국고 30Y'].map(k=>`<div class="card"><div class="metricLabel">${k}</div><div class="metricValue">${spreadText(s[k])}</div></div>`).join('');
+futureCards.innerHTML=[['3년 국채선물',obs.KTBF3_PRICE?.value],['10년 국채선물',obs.KTBF10_PRICE?.value],['10Y - 3Y 가격 스프레드',s['선물 10Y-3Y']],['외인 10년 누적',obs.KTBF10_FOREIGN_NET?.value]].map(([a,b])=>`<div class="card"><div class="metricLabel">${a}</div><div class="metricValue">${b===undefined||b===null?'—':n(b,2)}</div></div>`).join('');
+let al=alerts(s),alertsEl=document.getElementById('alerts');alertsEl.innerHTML=al.length?'<h2>현재 활성 경보</h2>'+al.map(a=>`<div class="alert"><strong>${a[1]}</strong><span>${a[2]}</span></div>`).join(''):'<h2>현재 활성 경보</h2><div class="card">활성 경보가 없습니다. 빈값 항목은 경보 판단에서 제외됩니다.</div>';al.forEach(a=>{if(!activeIds.has(a[0]))guide.unshift({time:new Date().toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul'}),title:a[1],text:a[2]});activeIds.add(a[0])});activeIds=new Set(al.map(a=>a[0]));guideLog.innerHTML=guide.length?guide.slice(0,20).map(g=>`<p><b>${g.time} · ${g.title}</b><br>${g.text}</p>`).join('<hr>'):'이번 접속에서 발생한 액션 가이드가 없습니다.';
+sourceRows.innerHTML=allIds.map(id=>{let o=obs[id];return `<tr><td>${labels[id]}</td><td class="right">${o?.value!==undefined?n(o.value,4):'<span class="blank">—</span>'}</td><td>${o?statusBadge(o.status):'실데이터 없음'}</td><td>${o?.source||''}</td></tr>`}).join('')}
+async function init(){loadBudget();try{let r=await fetch('./data/latest.json?t='+Date.now(),{cache:'no-store'});if(r.ok)market=await r.json()}catch(e){}render();await refreshLive()}init();setInterval(refreshLive,300000);
+</script>
+</body>
+</html>
